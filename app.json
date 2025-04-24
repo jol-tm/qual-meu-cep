@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "cepApp",
-    "slug": "cepApp",
+    "name": "Qual meu CEP?",
+    "slug": "Qual meu CEP?",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/map.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/map.png",
         "backgroundColor": "#ffffff"
       }
     },
