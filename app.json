@@ -4,7 +4,7 @@
     "slug": "cepApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/map.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -29,6 +29,9 @@
       "eas": {
         "projectId": "8e3a33b5-89b8-4a72-b5f8-70c0e957af6b"
       }
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

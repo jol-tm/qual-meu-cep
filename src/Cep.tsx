@@ -1,37 +1,72 @@
-import React, { useState } from 'react';
-import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useAnimatedValue } from 'react-native';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync();
 
 const Cep = () => {
+  const [loaded, error] = useFonts({'Nunito-Regular': require('./assets/fonts/Nunito-Regular.ttf'), 'Nunito-Bold': require('./assets/fonts/Nunito-Bold.ttf')});
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [street, setStreet] = useState('');
   const [message, setMessage] = useState(<Text></Text>);
   const [resultCEPs, setResultCEPs] = useState([]);
+  const scaleAnimation = useAnimatedValue(0.9);
+  const opacityAnimation = useAnimatedValue(0);
+  const animatedStyles = {
+    transform: [{scale: scaleAnimation}], 
+    opacity: opacityAnimation
+  }
+
+  // Handle font load
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+  
+  // Handle animations
+  useEffect(() => {
+    scaleAnimation.setValue(0.9);
+    opacityAnimation.setValue(0);
+    Animated.parallel([
+      Animated.timing(scaleAnimation, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnimation, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, [resultCEPs]);
 
   const searchCEP = async () => {
     const urlToFetch = `https://viacep.com.br/ws/${state}/${city}/${street}/json/`;
     let result = [];
     setResultCEPs([]);
+    setMessage(<Text style={styles.txt}>Pesquisando...</Text>);
 
     try {
       await fetch(urlToFetch)
-        .then(Response => Response.json())
-        .then((Response) => {
-          if (Response != '') {
-            console.log(Response);
-            Response.forEach((element: { cep: string; bairro: string; }) => {
-              const CEPAndNeighborhood = `${element.cep} | ${element.bairro}`;
-              result.push(CEPAndNeighborhood);
-            });
-            setMessage(<Text style={styles.txt}>Os possíveis CEP's são:</Text>);
-            setResultCEPs(result);
-          } else {
-            setMessage(<Text style={styles.error}>Sem resultados</Text>)
-          }
-        })
+      .then(Response => Response.json())
+      .then((Response) => {
+        if (Response != '') {
+          Response.forEach((element: { cep: string; bairro: string; }) => {
+            const CEPAndNeighborhood = `${element.cep} | ${element.bairro}`;
+            result.push(CEPAndNeighborhood);
+          });
+          setMessage(<Text style={styles.txt}>Os possíveis CEP's são:</Text>);
+          setResultCEPs(result);
+        } else {
+          setMessage(<Animated.Text style={[styles.error, animatedStyles]}>Sem resultados</Animated.Text>)
+        }
+      })
     } catch (error) {
-      setResultCEPs([]);
-      setMessage(<Text style={styles.error}>Erro na consulta! Favor verificar as informações.</Text>)
+      setMessage(<Animated.Text style={[styles.error, animatedStyles]}>Erro na consulta! Favor verificar as informações.</Animated.Text>)
     }
   }
 
@@ -41,39 +76,50 @@ const Cep = () => {
       <TextInput style={styles.input} placeholder='Cidade' onChangeText={(value) => setCity(value)} />
       <TextInput style={styles.input} placeholder='UF (Ex. SP)' onChangeText={(value) => setState(value)} />
       <TextInput style={styles.input} placeholder='Logradouro (Ex. Avenida M 25)' onChangeText={(value) => setStreet(value)} />
-      <Button title='Buscar' color={'lightgreen'} onPress={searchCEP} />
+      <TouchableOpacity style={styles.btn} onPress={searchCEP}><Text style={styles.btnTxt}>Pesquisar</Text></TouchableOpacity>
       {message}
       {resultCEPs.map((cep, index) => (
-        <Text style={styles.cepBox} key={index}>{cep}</Text>
+        <Animated.Text style={[styles.cepBox, animatedStyles]} key={index}>{cep}</Animated.Text>
       ))}
     </ScrollView>
   );
 }
 
-
 const styles = StyleSheet.create({
-  input: {
-    fontSize: 20,
+  btn: {
+    backgroundColor: 'lightgreen',
     padding: 10,
+    alignItems: 'center',
+    borderRadius: 5
+  },
+  btnTxt: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 18,
+  },
+  input: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 18,
+    padding: 12,
     borderWidth: 2,
     borderColor: 'lightgreen',
     borderRadius: 5
   },
   titles: {
+    fontFamily: 'Nunito-Bold',
     fontSize: 25,
-    fontWeight: '900',
   },
   txt: {
+    fontFamily: 'Nunito-Regular',
     fontSize: 18,
-    fontWeight: 700,
   },
   cepBox: {
+    fontFamily: 'Nunito-Regular',
     backgroundColor: 'lightblue',
     padding: 10,
     borderRadius: 5
   },
   error: {
-    fontWeight: '900',
+    fontFamily: 'Nunito-Bold',
     backgroundColor: 'lightcoral',
     padding: 10,
     borderRadius: 5
