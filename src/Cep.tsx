@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
 const Cep = () => {
-  const [loaded, error] = useFonts({'Nunito-Regular': require('./assets/fonts/Nunito-Regular.ttf'), 'Nunito-Bold': require('./assets/fonts/Nunito-Bold.ttf')});
+  const [loaded, error] = useFonts({ 'Nunito-Regular': require('./assets/fonts/Nunito-Regular.ttf'), 'Nunito-Bold': require('./assets/fonts/Nunito-Bold.ttf') });
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [street, setStreet] = useState('');
@@ -15,7 +15,7 @@ const Cep = () => {
   const scaleAnimation = useAnimatedValue(0.9);
   const opacityAnimation = useAnimatedValue(0);
   const animatedStyles = {
-    transform: [{scale: scaleAnimation}], 
+    transform: [{ scale: scaleAnimation }],
     opacity: opacityAnimation
   }
 
@@ -25,7 +25,7 @@ const Cep = () => {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
-  
+
   // Handle animations
   useEffect(() => {
     scaleAnimation.setValue(0.9);
@@ -45,6 +45,18 @@ const Cep = () => {
   }, [resultCEPs]);
 
   const searchCEP = async () => {
+    const regex = /\b(av|r)\b/i;
+
+    if (!state || !city || !street) {
+      setMessage(<Text style={styles.alert}>Preencha todas as informações!</Text>);
+      return;
+    }
+
+    if (regex.test(street)) {
+      setMessage(<Text style={styles.alert}>Escreva 'Avenida' ou 'Rua' sem abreviações</Text>);
+      return;
+    }
+
     const urlToFetch = `https://viacep.com.br/ws/${state}/${city}/${street}/json/`;
     let result = [];
     setResultCEPs([]);
@@ -52,26 +64,32 @@ const Cep = () => {
 
     try {
       await fetch(urlToFetch)
-      .then(Response => Response.json())
-      .then((Response) => {
-        if (Response != '') {
-          Response.forEach((element: { cep: string; bairro: string; }) => {
-            const CEPAndNeighborhood = `${element.cep} | ${element.bairro}`;
-            result.push(CEPAndNeighborhood);
-          });
-          setMessage(<Text style={styles.txt}>Os possíveis CEP's são:</Text>);
-          setResultCEPs(result);
-        } else {
-          setMessage(<Animated.Text style={[styles.error, animatedStyles]}>Sem resultados</Animated.Text>)
-        }
-      })
+        .then(Response => Response.json())
+        .then((Response) => {
+          if (Response != '') {
+            Response.forEach((element: { cep: string; bairro: string; }) => {
+              const CEPAndNeighborhood = `${element.cep} | ${element.bairro}`;
+              result.push(CEPAndNeighborhood);
+            });
+            setMessage(<Text style={styles.txt}>Os possíveis CEP's são:</Text>);
+            setResultCEPs(result);
+          } else {
+            setMessage(<Animated.Text style={[styles.error, animatedStyles]}>Sem resultados</Animated.Text>)
+          }
+        })
     } catch (error) {
       setMessage(<Animated.Text style={[styles.error, animatedStyles]}>Erro na consulta! Favor verificar as informações.</Animated.Text>)
     }
   }
 
   return (
-    <ScrollView contentContainerStyle={{ width: 300, gap: 10 }}>
+    <ScrollView contentContainerStyle={{
+      width: '100%',
+      padding: 10,
+      paddingTop: 20,
+      alignSelf: 'center',
+      gap: 10
+    }}>
       <Text style={styles.titles}>Qual meu CEP?</Text>
       <TextInput style={styles.input} placeholder='Cidade' onChangeText={(value) => setCity(value)} />
       <TextInput style={styles.input} placeholder='UF (Ex. SP)' onChangeText={(value) => setState(value)} />
@@ -121,6 +139,12 @@ const styles = StyleSheet.create({
   error: {
     fontFamily: 'Nunito-Bold',
     backgroundColor: 'lightcoral',
+    padding: 10,
+    borderRadius: 5
+  },
+  alert: {
+    fontFamily: 'Nunito-Bold',
+    backgroundColor: 'orange',
     padding: 10,
     borderRadius: 5
   }
